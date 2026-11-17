@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>既読から何分？</title>
+<!-- 検索やSNSで表示される説明・カード画像 -->
+<meta name="description" content="好きな人、上司、元恋人、母…。メッセージを既読にしてから、何分後に返すのが正解？ 返信のちょうどいいタイミングを当てる、ブラウザで遊べる無料ゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="既読から何分？">
+<meta property="og:description" content="返信のちょうどいいタイミング、あなたはわかる？ ブラウザで今すぐ遊べる無料ゲーム。">
+<meta property="og:url" content="https://gunhana-games.github.io/kidoku/">
+<meta property="og:image" content="https://gunhana-games.github.io/kidoku/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="既読から何分？">
+<meta name="twitter:description" content="返信のちょうどいいタイミング、あなたはわかる？">
+<meta name="twitter:image" content="https://gunhana-games.github.io/kidoku/ogp.png">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#2b3445">
+<style>
+  :root {
+    --bg: #1f2430;
+    --phone: #9fb6d4;
+    --header: #2b3445;
+    --their: #ffffff;
+    --mine: #8ee08a;
+    --text: #1d1d1f;
+    --sub: #5c6575;
+    --accent: #ff5a7a;
+    --gold: #ffc83d;
+    --ok: #2fb35a;
+    --ng: #e5484d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", sans-serif;
+    color: var(--text);
+    display: flex; justify-content: center; align-items: stretch;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .phone {
+    position: relative;
+    width: 100%; max-width: 420px; min-height: 100%;
+    background: var(--phone);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  /* ===== 共通ボタン ===== */
+  .btn {
+    border: none; border-radius: 999px; cursor: pointer;
+    font: inherit; font-weight: 700; font-size: 18px;
+    padding: 16px 24px; width: 100%;
+    transition: transform .06s;
+  }
+  .btn:active { transform: scale(.96); }
+  .btn-main { background: var(--accent); color: #fff; box-shadow: 0 4px 0 #c23a57; }
+  .btn-sub  { background: #fff; color: var(--text); box-shadow: 0 4px 0 #b9c2cf; }
+  .btn-x    { background: #000; color: #fff; box-shadow: 0 4px 0 #444; }
+  .btn:disabled { opacity: .4; cursor: default; }
+
+  /* ===== タイトル画面 ===== */
+  #title, #result {
+    flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 32px 24px; gap: 18px; text-align: center;
+    background: linear-gradient(180deg, #fff6f8 0%, #ffe3ea 100%);
+  }
+  .logo-bubble {
+    background: var(--mine); border-radius: 22px; padding: 14px 22px;
+    font-size: 15px; position: relative; color: #1d3b1c; font-weight: 700;
+  }
+  .logo-bubble::after {
+    content: "既読"; position: absolute; left: -36px; bottom: 2px;
+    font-size: 12px; color: var(--sub); font-weight: 400;
+  }
+  h1 { font-size: 44px; letter-spacing: .02em; line-height: 1.15; }
+  h1 span { color: var(--accent); }
+  .lead { color: var(--sub); font-size: 15px; line-height: 1.8; }
+  .title-buttons { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+
+  /* ===== トーク画面 ===== */
+  #game { flex: 1; display: none; flex-direction: column; min-height: 100%; }
+  .status {
+    background: var(--header); color: #fff; font-size: 12px;
+    display: flex; justify-content: space-between; padding: 6px 14px;
+  }
+  .talk-header {
+    background: var(--header); color: #fff; padding: 8px 14px 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: #fff;
+    display: grid; place-items: center; font-size: 22px; flex-shrink: 0;
+  }
+  .talk-name { font-weight: 700; font-size: 16px; }
+  .talk-round { margin-left: auto; font-size: 12px; opacity: .7; }
+  .talk {
+    flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 12px;
+    overflow-y: auto;
+  }
+  .row { display: flex; align-items: flex-end; gap: 6px; animation: pop .25s ease-out; }
+  .row.their { justify-content: flex-start; }
+  .row.mine { justify-content: flex-end; }
+  .row.note { justify-content: center; }
+  .bubble {
+    max-width: 75%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.5;
+    word-break: break-word;
+  }
+  .their .bubble { background: var(--their); border-top-left-radius: 4px; }
+  .mine .bubble { background: var(--mine); border-top-right-radius: 4px; }
+  .meta { font-size: 10px; color: #33415a; line-height: 1.3; text-align: right; white-space: nowrap; }
+  .their .meta { text-align: left; }
+  .sender { font-size: 11px; color: #33415a; margin: 0 0 3px 4px; }
+  /* 届いた写真（絵文字で表現） */
+  .bubble:has(.photo) { padding: 0; background: transparent !important; }
+  .photo {
+    width: 150px; height: 112px; border-radius: 14px;
+    display: grid; place-items: center; font-size: 52px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  .row > div:not(.meta) { max-width: 75%; }
+  .row .bubble { max-width: 100%; display: inline-block; }
+  .note .bubble {
+    background: rgba(0,0,0,.28); color: #fff; font-size: 13px; border-radius: 999px; padding: 6px 14px; max-width: 90%;
+    text-align: center;
+  }
+  .typing span {
+    display: inline-block; width: 7px; height: 7px; margin: 0 2px; border-radius: 50%;
+    background: #9aa3b2; animation: blink 1s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
+  @keyframes pop { from { transform: translateY(8px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  /* ===== タイマーと操作 ===== */
+  .panel {
+    background: #fff; padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+    border-top-left-radius: 20px; border-top-right-radius: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.12);
+  }
+  .timer-label { text-align: center; color: var(--sub); font-size: 13px; }
+  /* 送る予定の文章（入力欄に打ち終わっている状態） */
+  .draft {
+    flex: 1; min-width: 0; background: #f1f3f6; border-radius: 22px;
+    padding: 12px 16px; font-size: 15px; line-height: 1.45; color: var(--text);
+    display: flex; align-items: center; word-break: break-word;
+  }
+  .draft::after { content: "|"; color: var(--accent); margin-left: 2px; animation: blink 1s infinite; }
+  #replyBtn { width: auto; flex: 0 0 92px; padding: 0 12px; }
+  .timer {
+    text-align: center; font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums;
+    line-height: 1.1; min-height: 44px;
+  }
+  .timer small { font-size: 18px; font-weight: 700; margin-left: 2px; }
+  .timer.hot { color: var(--ng); }
+  .actions { display: flex; gap: 10px; }
+  .actions .btn { font-size: 17px; }
+  .actions .btn-sub { flex: 0 0 38%; font-size: 14px; }
+  .answer { display: none; text-align: center; font-size: 14px; color: var(--sub); line-height: 1.7; }
+  .explain {
+    display: none; background: #f3f6fb; border-radius: 12px; padding: 12px 14px;
+    font-size: 14px; line-height: 1.75; color: var(--text); animation: pop .2s ease-out;
+    max-height: 30vh; overflow-y: auto;
+  }
+  .explain b { color: var(--accent); }
+  .answer b { color: var(--text); }
+
+  /* ===== 判定スタンプ ===== */
+  .judge {
+    position: absolute; left: 50%; top: 38%; z-index: 10;
+    transform: translate(-50%, -50%) rotate(-8deg) scale(0);
+    padding: 10px 22px; border: 5px solid currentColor; border-radius: 14px;
+    font-size: 34px; font-weight: 900; background: rgba(255,255,255,.92);
+    pointer-events: none; white-space: nowrap;
+  }
+  .judge.show { animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) forwards; }
+  .judge .pts { display: block; font-size: 16px; text-align: center; }
+  @keyframes stamp {
+    0% { transform: translate(-50%, -50%) rotate(-8deg) scale(2.4); opacity: 0; }
+    100% { transform: translate(-50%, -50%) rotate(-8deg) scale(1); opacity: 1; }
+  }
+  .shake { animation: shake .3s; }
+  @keyframes shake {
+    0%, 100% { transform: none; }
+    20% { transform: translate(-6px, 2px); }
+    40% { transform: translate(5px, -2px); }
+    60% { transform: translate(-3px, 1px); }
+    80% { transform: translate(2px, 0); }
+  }
+
+  /* ===== ラウンド開始の幕 ===== */
+  .curtain {
+    position: absolute; inset: 0; z-index: 20; background: var(--header); color: #fff;
+    display: none; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
+  }
+  .curtain .r { font-size: 14px; letter-spacing: .3em; opacity: .7; }
+  .curtain .who { font-size: 30px; font-weight: 800; }
+  .curtain .when { font-size: 16px; opacity: .8; }
+
+  /* ===== 結果画面 ===== */
+  #result { display: none; gap: 14px; }
+  .res-label { font-size: 14px; color: var(--sub); }
+  .res-score { font-size: 72px; font-weight: 900; color: var(--accent); line-height: 1; }
+  .res-title { font-size: 26px; font-weight: 800; }
+  .res-comment { font-size: 14px; color: var(--sub); line-height: 1.7; }
+  .res-list { width: 100%; max-width: 320px; background: #fff; border-radius: 16px; padding: 6px 14px; }
+  .res-list div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0e2e6; }
+  .res-list div:last-child { border-bottom: none; }
+  .res-list b { font-variant-numeric: tabular-nums; }
+
+  /* 紙吹雪 */
+  .confetti { position: absolute; top: -10px; width: 8px; height: 14px; z-index: 30; pointer-events: none; animation: fall linear forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+
+  <!-- タイトル -->
+  <section id="title">
+    <div class="logo-bubble">今度ごはん行かない？</div>
+    <h1>既読から<br><span>何分？</span></h1>
+    <p class="lead">メッセージを開いたら、もう「既読」。<br>相手によって、返信のちょうどいい時間はちがう。<br>早すぎても、遅すぎてもダメ。</p>
+    <div class="title-buttons">
+      <button class="btn btn-main" id="startBtn">はじめる</button>
+    </div>
+  </section>
+
+  <!-- ゲーム -->
+  <section id="game">
+    <div class="status"><span id="clock">21:04</span><span>●●●● 5G　🔋</span></div>
+    <div class="talk-header">
+      <div class="avatar" id="avatar">🙂</div>
+      <div class="talk-name" id="talkName">名前</div>
+      <div class="talk-round" id="talkRound">1 / 3</div>
+    </div>
+    <div class="talk" id="talk"></div>
+    <div class="panel">
+      <div class="timer-label" id="timerLabel">メッセージが届きました</div>
+      <div class="timer" id="timer">&nbsp;</div>
+      <div class="actions" id="actions">
+        <div class="draft" id="draft"></div>
+        <button class="btn btn-main" id="replyBtn" disabled>送信</button>
+      </div>
+      <div class="answer" id="answer"></div>
+      <div class="explain" id="explain"></div>
+      <div class="actions" id="afterActions" style="display:none">
+        <button class="btn btn-sub" id="whyBtn">解説を見る</button>
+        <button class="btn btn-main" id="nextBtn">つぎへ</button>
+      </div>
+    </div>
+    <div class="judge" id="judge"></div>
+    <div class="curtain" id="curtain">
+      <div class="r" id="cRound">ROUND 1</div>
+      <div class="who" id="cWho">名前</div>
+      <div class="when" id="cWhen">21:04</div>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="result">
+    <div class="res-label">あなたの返信偏差値</div>
+    <div class="res-score" id="resScore">50</div>
+    <div class="res-title" id="resTitle">称号</div>
+    <div class="res-comment" id="resComment"></div>
+    <div class="res-list" id="resList"></div>
+    <div class="title-buttons">
+      <button class="btn btn-x" id="shareBtn">結果をXでシェア</button>
+      <button class="btn btn-sub" id="retryBtn">もう一回</button>
+    </div>
+  </section>
+</div>
+
+<script src="scenes.js"></script>
+<script>
+/* 場面のデータは scenes.js にあります */
+// 毎回、ROUNDS 人をランダムに選び、それぞれのパターンもランダムに1つ選ぶ
+let SCENES = [];
+function buildDeck() {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const people = [...PEOPLE].sort(() => Math.random() - 0.5).slice(0, Math.min(ROUNDS, PEOPLE.length));
+  return people.map(p => ({ who: p.who, icon: p.icon, ...pick(p.variants) }));
+}
+
+/* 経過時間 → ゲーム内の分。だんだん速く進む */
+// 最初の10秒（約75分）はゆっくり、そのあと一気に進み、約23秒で24時間に届く
+const toMinutes = t => 1.5 * t + 0.6 * t * t + 0.5 * Math.max(0, t - 10) ** 3;
+const LIMIT_MIN = 24 * 60; // 24時間たったら自動で既読スルー扱い
+
+/* ゲーム内の分 → 実際の秒数（toMinutes の逆） */
+function toSeconds(m) {
+  let lo = 0, hi = 40;
+  for (let i = 0; i < 40; i++) { const mid = (lo + hi) / 2; if (toMinutes(mid) < m) lo = mid; else hi = mid; }
+  return lo;
+}
+
+/* 点数：正解の時間帯から「実際に何秒ズレたか」で1点単位に決める
+   ・正解の時間帯の中 … 真ん中が100点、端が90点
+   ・外れたら         … 85点から、ズレるほど急に下がる（0.5秒で約60点、1秒で約45点、2秒で約20点）
+   ・「返さない」が正解の場面で返信したときは、区切りごとの点数のまま */
+function timingScore(s, min, zone) {
+  const i = s.zones.findIndex(z => z.score === 100);
+  if (i < 0) return zone.score;
+  const lo = toSeconds(i > 0 ? s.zones[i - 1].max : 0);
+  const hi = toSeconds(s.zones[i].max);
+  const t = toSeconds(min);
+  if (t >= lo && t < hi) {
+    const half = (hi - lo) / 2;
+    return Math.round(100 - 10 * Math.abs(t - (lo + half)) / half);
+  }
+  const d = t < lo ? lo - t : t - hi;
+  return Math.round(85 * Math.exp(-d / 1.5));
+}
+
+/* 称号（合計点の割合で決まる。上から順に判定） */
+const RESULT_TITLES = [
+  { min: 0.95, title: "返信の神",         comment: "相手の気持ちが全部わかっている。あなたに返信を任せたい。" },
+  { min: 0.88, title: "既読マスター",     comment: "押すべき瞬間を知っている。あと一歩で神の領域。" },
+  { min: 0.80, title: "空気が読める人",   comment: "ほとんど完璧。たまに出る焦りもご愛嬌。" },
+  { min: 0.70, title: "気配り上手",       comment: "相手のことをちゃんと考えている。その調子。" },
+  { min: 0.60, title: "そつなくこなす人", comment: "大きな失敗はしない。でも、心をつかむにはもうひと工夫。" },
+  { min: 0.50, title: "ちょっと惜しい人", comment: "悪くない。でも、あとひと呼吸おけたら。" },
+  { min: 0.40, title: "気分屋さん",       comment: "早かったり遅かったり。相手はあなたのペースがつかめません。" },
+  { min: 0.30, title: "返信がこわい人",   comment: "相手はあなたの返信を、少しドキドキしながら待っています。" },
+  { min: 0.20, title: "タイミング迷子",   comment: "押すたびに、なぜかズレる。画面の時計をよく見てみよう。" },
+  { min: 0.10, title: "通知オフ推奨",     comment: "いっそ通知を切ったほうが、平和かもしれません。" },
+  { min: 0,    title: "スマホを置こう",   comment: "一度スマホを置いて、深呼吸してみましょう。" },
+];
+
+/* ============================================================
+   ここから下はゲームの動き
+   ============================================================ */
+const $ = id => document.getElementById(id);
+let round = 0, results = [], timerId = null, startAt = 0, state = "idle";
+
+/* ---- 音（ファイル不要の短い効果音） ---- */
+let audio = null;
+function beep(freqs, len = 0.08, type = "sine", vol = 0.15) {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    let t = audio.currentTime;
+    freqs.forEach(f => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + len);
+      o.connect(g); g.connect(audio.destination);
+      o.start(t); o.stop(t + len);
+      t += len * 0.9;
+    });
+  } catch (e) { /* 音が出せない環境でもゲームは続ける */ }
+}
+const sndArrive = () => beep([880, 1320], 0.09);
+const sndSend   = () => beep([660], 0.06, "triangle");
+const sndGood   = () => beep([784, 988, 1319], 0.1, "triangle", 0.18);
+const sndBad    = () => beep([220, 160], 0.16, "sawtooth", 0.1);
+
+/* ---- 表示まわり ---- */
+function show(id) {
+  ["title", "game", "result"].forEach(s => $(s).style.display = (s === id ? "flex" : "none"));
+}
+const pad = n => String(n).padStart(2, "0");
+function clockText(scene, minutes) {
+  const total = scene.start[0] * 60 + scene.start[1] + Math.floor(minutes);
+  return `${pad(Math.floor(total / 60) % 24)}:${pad(total % 60)}`;
+}
+function durationText(m) {
+  m = Math.floor(m);
+  if (m < 60) return `${m}<small>分</small>`;
+  const h = Math.floor(m / 60), r = m % 60;
+  return `${h}<small>時間</small>${r ? `${r}<small>分</small>` : ""}`;
+}
+function durationPlain(m) { return m < 1 ? "すぐ" : durationText(m).replace(/<\/?small>/g, "") + "後"; }
+
+function addRow(kind, html, meta = "", name = "") {
+  const row = document.createElement("div");
+  row.className = `row ${kind}`;
+  const label = name ? `<div class="sender">${name}</div>` : "";
+  const bubble = `<div>${label}<div class="bubble">${html}</div></div>`;
+  const m = meta ? `<div class="meta">${meta}</div>` : "";
+  row.innerHTML = kind === "mine" ? m + bubble : bubble + m;
+  $("talk").appendChild(row);
+  $("talk").scrollTop = $("talk").scrollHeight;
+  return row;
+}
+
+/* ---- ラウンドの流れ ---- */
+function startGame() {
+  round = 0; results = [];
+  SCENES = buildDeck();
+  show("game");
+  startRound();
+}
+
+function startRound() {
+  const s = SCENES[round];
+  state = "intro";
+  $("talk").innerHTML = "";
+  $("avatar").textContent = s.icon;
+  $("talkName").textContent = s.who;
+  $("talkRound").textContent = `${round + 1} / ${SCENES.length}`;
+  $("clock").textContent = clockText(s, 0);
+  $("timer").innerHTML = "&nbsp;";
+  $("timer").classList.remove("hot");
+  $("timerLabel").textContent = "メッセージが届きました";
+  $("draft").textContent = s.reply;
+  $("actions").style.display = "flex";
+  $("replyBtn").disabled = true;
+  $("answer").style.display = "none";
+  $("explain").style.display = "none";
+  $("afterActions").style.display = "none";
+  $("whyBtn").textContent = "解説を見る";
+  $("judge").className = "judge";
+
+  // ラウンド開始の幕（短く）
+  $("cRound").textContent = `ROUND ${round + 1}`;
+  $("cWho").textContent = `${s.icon} ${s.who}`;
+  $("cWhen").textContent = `${clockText(s, 0)} ごろ`;
+  $("curtain").style.display = "flex";
+  setTimeout(() => {
+    $("curtain").style.display = "none";
+    addRow("their", s.message, clockText(s, 0), s.sender);
+    sndArrive();
+    setTimeout(beginTimer, 500);
+  }, 1100);
+}
+
+function beginTimer() {
+  state = "running";
+  $("replyBtn").disabled = false;
+  $("timerLabel").textContent = "既読をつけてから";
+  startAt = performance.now();
+  pendingOthers = [...(SCENES[round].others || [])];
+  const tick = () => {
+    const min = toMinutes((performance.now() - startAt) / 1000);
+    // 画面の更新が飛んでも、途中の発言は必ず出してから判定する
+    flushOthers(Math.min(min, LIMIT_MIN));
+    if (min >= LIMIT_MIN) { finish(null, LIMIT_MIN); return; }
+    $("timer").innerHTML = durationText(min);
+    $("timer").classList.toggle("hot", min >= 60);
+    $("clock").textContent = clockText(SCENES[round], min);
+    timerId = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+// 時間がたつと届く発言・写真（グループの他の人、写真の追加など）
+let pendingOthers = [];
+function flushOthers(min) {
+  const s = SCENES[round];
+  while (pendingOthers.length && min >= pendingOthers[0].at) {
+    const o = pendingOthers.shift();
+    const body = o.photo
+      ? `<div class="photo" style="background:${o.bg || "linear-gradient(135deg,#ffd6a5,#ff9fb2)"}">${o.photo}</div>`
+      : o.text;
+    addRow("their", body, clockText(s, o.at), o.name);
+    beep([1200], 0.05, "sine", 0.06);
+  }
+}
+
+function stopTimer() {
+  cancelAnimationFrame(timerId);
+  return toMinutes((performance.now() - startAt) / 1000);
+}
+
+// replied: true=返信 / false=既読スルー / null=時間切れ（既読スルー扱い）
+function finish(replied, forcedMin) {
+  if (state !== "running") return;
+  state = "reacting";
+  const min = forcedMin ?? stopTimer();
+  if (forcedMin) cancelAnimationFrame(timerId);
+  flushOthers(min);
+  const s = SCENES[round];
+  $("replyBtn").disabled = true;
+  $("timer").innerHTML = durationText(min);
+  $("clock").textContent = clockText(s, min);
+
+  let outcome;
+  if (replied) {
+    const zone = s.zones.find(z => min < z.max);
+    const score = timingScore(s, min, zone);
+    outcome = { ...zone, score, judge: score >= 98 ? "ど真ん中！" : zone.judge };
+    addRow("mine", s.reply, `既読<br>${clockText(s, min)}`);
+    sndSend();
+  } else {
+    outcome = s.skip;
+    addRow("note", "返信しないまま、24時間がたった（既読スルー）");
+  }
+
+  // 相手の反応（打っている…の演出を少しだけ）
+  const isNarration = outcome.react.startsWith("（");
+  const typing = isNarration ? null : addRow("their", '<span class="typing"><span></span><span></span><span></span></span>');
+  setTimeout(() => {
+    if (typing) typing.remove();
+    if (isNarration) addRow("note", outcome.react.replace(/^（|）$/g, ""));
+    else addRow("their", outcome.react, clockText(s, min + 1), s.sender);
+    showJudge(outcome, min, replied);
+  }, isNarration ? 400 : 850);
+}
+
+function showJudge(outcome, min, replied) {
+  const s = SCENES[round];
+  const good = outcome.score >= 90, okish = outcome.score >= 60;
+  const j = $("judge");
+  j.style.color = good ? "var(--ok)" : okish ? "#e08a00" : "var(--ng)";
+  j.innerHTML = `${outcome.judge}<span class="pts">+${outcome.score}点</span>`;
+  j.className = "judge show";
+  if (good) { sndGood(); confetti(24); }
+  else if (!okish) { sndBad(); $("phone").classList.remove("shake"); void $("phone").offsetWidth; $("phone").classList.add("shake"); }
+  else sndSend();
+
+  results.push({ who: s.who, icon: s.icon, score: outcome.score, min, replied });
+
+  setTimeout(() => {
+    j.className = "judge";
+    $("actions").style.display = "none";
+    $("timerLabel").textContent = replied ? "あなたの返信" : "あなたは";
+    if (!replied) $("timer").innerHTML = "既読スルー";
+    $("answer").innerHTML = `正解の目安：<b>${s.ideal}</b>`;
+    $("answer").style.display = "block";
+    $("nextBtn").textContent = round + 1 < SCENES.length ? "つぎへ" : "結果を見る";
+    $("explain").innerHTML = `<b>なぜ？</b><br>${s.why || s.ideal}`;
+    $("whyBtn").style.display = s.why ? "" : "none";
+    $("afterActions").style.display = "flex";
+    state = "done";
+  }, 1300);
+}
+
+function next() {
+  round++;
+  if (round < SCENES.length) startRound(); else showResult();
+}
+
+/* ---- 結果 ---- */
+let shareText = "";
+function showResult() {
+  const total = results.reduce((a, r) => a + r.score, 0);
+  const max = SCENES.length * 100;
+  const hensachi = Math.round(35 + (total / max) * 40);
+  const t = RESULT_TITLES.find(r => total / max >= r.min);
+  $("resScore").textContent = hensachi;
+  $("resTitle").textContent = `「${t.title}」`;
+  $("resComment").textContent = t.comment;
+  $("resList").innerHTML = results.map(r =>
+    `<div><span>${r.who}</span><span>${r.replied ? durationPlain(r.min) + "に返信" : "既読スルー"}　<b>${r.score}点</b></span></div>`
+  ).join("");
+  show("result");
+  if (hensachi >= 65) confetti(60);
+
+  // シェア文は答えがバレないよう、色のマスだけで結果を見せる
+  const square = sc => sc >= 90 ? "🟩" : sc >= 50 ? "🟨" : "🟥";
+  const squares = results.map(r => r.icon + square(r.score)).join(" ");
+  shareText = `【既読から何分？】\n返信偏差値 ${hensachi}「${t.title}」\n\n${squares}\n\n#既読から何分`;
+}
+
+function share() {
+  // シェアするURLは、余計な # や ? を取り除いたゲームのトップページ
+  const url = location.protocol.startsWith("http") ? location.origin + location.pathname.replace(/index\.html$/, "") : "";
+  const intent = "https://x.com/intent/tweet?text=" + encodeURIComponent(shareText) + (url ? "&url=" + encodeURIComponent(url) : "");
+  window.open(intent, "_blank", "noopener");
+}
+
+/* ---- 紙吹雪 ---- */
+function confetti(n) {
+  const colors = ["#ff5a7a", "#ffc83d", "#8ee08a", "#5ab0ff", "#c38bff"];
+  const phone = $("phone");
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "%";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = 1.2 + Math.random() * 1.2 + "s";
+    c.style.animationDelay = Math.random() * 0.3 + "s";
+    phone.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+/* ---- ボタン ---- */
+$("startBtn").onclick = startGame;
+$("replyBtn").onclick = () => finish(true);
+$("nextBtn").onclick = next;
+// 解説は押したときだけ開く（もう一度押すと閉じる）
+$("whyBtn").onclick = () => {
+  const open = $("explain").style.display !== "block";
+  $("explain").style.display = open ? "block" : "none";
+  $("whyBtn").textContent = open ? "解説を閉じる" : "解説を見る";
+};
+$("retryBtn").onclick = startGame;
+$("shareBtn").onclick = share;
+</script>
+</body>
+</html>
