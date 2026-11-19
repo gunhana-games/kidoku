@@ -82,7 +82,7 @@
   .title-buttons { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
 
   /* ===== トーク画面 ===== */
-  #game { flex: 1; display: none; flex-direction: column; min-height: 100%; }
+  #game { flex: 1; display: none; flex-direction: column; min-height: 100%; position: relative; }
   .status {
     background: var(--header); color: #fff; font-size: 12px;
     display: flex; justify-content: space-between; padding: 6px 14px;
@@ -96,6 +96,35 @@
     display: grid; place-items: center; font-size: 22px; flex-shrink: 0;
   }
   .talk-name { font-weight: 700; font-size: 16px; }
+  .talk-who { min-width: 0; }
+  .talk-status {
+    font-size: 11px; opacity: .65; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px;
+  }
+  /* 電池 */
+  .sys { display: flex; align-items: center; gap: 6px; }
+  .batt { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+  .batt-icon {
+    position: relative; width: 22px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px;
+    display: inline-block; padding: 1px;
+  }
+  .batt-icon::after {
+    content: ""; position: absolute; right: -4px; top: 3px; width: 2px; height: 4px;
+    background: currentColor; border-radius: 0 1px 1px 0;
+  }
+  .batt-icon i { display: block; height: 100%; background: currentColor; border-radius: 1px; }
+  .batt.low { color: #ff6b6b; }
+  /* 通知バナー */
+  .banner {
+    position: absolute; left: 8px; right: 8px; top: 6px; z-index: 15;
+    background: rgba(250, 250, 252, .97); color: var(--text); border-radius: 14px;
+    padding: 10px 14px; font-size: 13px; line-height: 1.45;
+    box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    transform: translateY(-130%); transition: transform .3s ease;
+    pointer-events: none;
+  }
+  .banner b { display: block; font-size: 11px; color: var(--sub); margin-bottom: 1px; }
+  .banner.show { transform: translateY(0); }
   .talk-round { margin-left: auto; font-size: 12px; opacity: .7; }
   .talk {
     flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 12px;
@@ -152,6 +181,28 @@
   }
   .draft::after { content: "|"; color: var(--accent); margin-left: 2px; animation: blink 1s infinite; }
   #replyBtn { width: auto; flex: 0 0 92px; padding: 0 12px; }
+  #replyBtn.call { flex: 1; background: #2fb35a; box-shadow: 0 4px 0 #1f8a42; padding: 14px 12px; }
+
+  /* 曲のカード */
+  .music { min-width: 200px; display: flex; flex-direction: column; gap: 6px; }
+  .music b { font-size: 14px; }
+  .music-bar { height: 6px; background: #e3e7ee; border-radius: 3px; overflow: hidden; }
+  .music-bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+  #musicTime { font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
+  /* 文字の入った写真（チラシ・ホワイトボード） */
+  .photo.photo-text {
+    font-size: 15px; font-weight: 800; line-height: 1.5; text-align: center;
+    color: #3a2a00; padding: 12px; height: auto; min-height: 112px; width: 180px;
+  }
+  .photo.photo-text.board {
+    color: #1d3fae; font-weight: 700; border: 6px solid #c9ced8; border-radius: 6px;
+    font-family: "Comic Sans MS", "Hiragino Maru Gothic ProN", "Yu Gothic UI", sans-serif;
+  }
+  /* スタンプ（吹き出しなしで大きく） */
+  .bubble:has(.stamp) { background: transparent !important; padding: 0; }
+  .stamp { font-size: 64px; line-height: 1; }
+  /* 送信取り消し */
+  .bubble.unsent { background: rgba(255,255,255,.55) !important; color: var(--sub); font-size: 13px; font-style: italic; }
   .timer {
     text-align: center; font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums;
     line-height: 1.1; min-height: 44px;
@@ -199,6 +250,7 @@
     display: none; flex-direction: column; justify-content: center; align-items: center; gap: 10px;
   }
   .curtain .r { font-size: 14px; letter-spacing: .3em; opacity: .7; }
+  .curtain .r.new { opacity: 1; color: var(--gold); font-weight: 800; letter-spacing: .15em; }
   .curtain .who { font-size: 30px; font-weight: 800; }
   .curtain .when { font-size: 16px; opacity: .8; }
 
@@ -208,10 +260,15 @@
   .res-score { font-size: 72px; font-weight: 900; color: var(--accent); line-height: 1; }
   .res-title { font-size: 26px; font-weight: 800; }
   .res-comment { font-size: 14px; color: var(--sub); line-height: 1.7; }
-  .res-list { width: 100%; max-width: 320px; background: #fff; border-radius: 16px; padding: 6px 14px; }
-  .res-list div { display: flex; justify-content: space-between; padding: 10px 0; font-size: 14px; border-bottom: 1px solid #f0e2e6; }
-  .res-list div:last-child { border-bottom: none; }
-  .res-list b { font-variant-numeric: tabular-nums; }
+  .res-mode {
+    font-size: 13px; font-weight: 700; color: #fff; background: var(--header);
+    padding: 4px 14px; border-radius: 999px;
+  }
+  .res-img {
+    width: 100%; max-width: 360px; border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.15); background: #fff;
+  }
+  .daily-note { font-size: 12px; color: var(--sub); margin-top: 2px; }
 
   /* 紙吹雪 */
   .confetti { position: absolute; top: -10px; width: 8px; height: 14px; z-index: 30; pointer-events: none; animation: fall linear forwards; }
@@ -227,16 +284,28 @@
     <h1>既読から<br><span>何分？</span></h1>
     <p class="lead">メッセージを開いたら、もう「既読」。<br>相手によって、返信のちょうどいい時間はちがう。<br>早すぎても、遅すぎてもダメ。</p>
     <div class="title-buttons">
-      <button class="btn btn-main" id="startBtn">はじめる</button>
+      <button class="btn btn-main" id="dailyBtn">今日の5問</button>
+      <button class="btn btn-sub" id="startBtn">フリープレイ</button>
+      <p class="daily-note" id="dailyNote">今日の5問は1日1回。みんな同じ問題です。</p>
     </div>
   </section>
 
   <!-- ゲーム -->
   <section id="game">
-    <div class="status"><span id="clock">21:04</span><span>●●●● 5G　🔋</span></div>
+    <div class="status">
+      <span id="clock">21:04</span>
+      <span class="sys">●●●● 5G
+        <span class="batt" id="batt"><span id="battPct">80%</span><span class="batt-icon"><i id="battFill"></i></span></span>
+      </span>
+    </div>
+    <!-- 画面の上に出る通知 -->
+    <div class="banner" id="banner"><b id="bannerFrom"></b><span id="bannerText"></span></div>
     <div class="talk-header">
       <div class="avatar" id="avatar">🙂</div>
-      <div class="talk-name" id="talkName">名前</div>
+      <div class="talk-who">
+        <div class="talk-name" id="talkName">名前</div>
+        <div class="talk-status" id="talkStatus"></div>
+      </div>
       <div class="talk-round" id="talkRound">1 / 3</div>
     </div>
     <div class="talk" id="talk"></div>
@@ -264,27 +333,105 @@
 
   <!-- 結果 -->
   <section id="result">
+    <div class="res-mode" id="resMode">今日の5問</div>
     <div class="res-label">あなたの返信偏差値</div>
     <div class="res-score" id="resScore">50</div>
     <div class="res-title" id="resTitle">称号</div>
     <div class="res-comment" id="resComment"></div>
-    <div class="res-list" id="resList"></div>
+    <!-- 結果のトーク一覧（そのまま画像として保存・シェアできる） -->
+    <img class="res-img" id="resImg" alt="結果のトーク一覧">
     <div class="title-buttons">
+      <button class="btn btn-main" id="imgBtn">画像でシェア</button>
       <button class="btn btn-x" id="shareBtn">結果をXでシェア</button>
       <button class="btn btn-sub" id="retryBtn">もう一回</button>
+      <button class="btn btn-sub" id="toTitleBtn">タイトルへ</button>
     </div>
   </section>
 </div>
 
 <script src="scenes.js"></script>
+<script src="daily.js"></script>
+<!-- 開発用の一覧ボタン。公開するときは、この1行を消す（dev.js も消してよい） -->
+<script src="dev.js" defer></script>
 <script>
 /* 場面のデータは scenes.js にあります */
-// 毎回、ROUNDS 人をランダムに選び、それぞれのパターンもランダムに1つ選ぶ
+// ROUNDS 人を選び、それぞれのパターンを1つ選ぶ。
+// rand を渡すと、その乱数で選ぶ（今日の5問は日付から作った乱数で、全員同じ問題になる）
 let SCENES = [];
-function buildDeck() {
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-  const people = [...PEOPLE].sort(() => Math.random() - 0.5).slice(0, Math.min(ROUNDS, PEOPLE.length));
-  return people.map(p => ({ who: p.who, icon: p.icon, ...pick(p.variants) }));
+let mode = "free"; // "daily"（今日の5問）か "free"（フリープレイ）
+// 遊べる場面：scenes.js の場面 ＋ 日付が過ぎた「今日の新作」（daily.js）
+function poolPeople() {
+  const today = todayKey();
+  return PEOPLE.map(p => ({
+    ...p,
+    variants: [...p.variants, ...dailyEntries().filter(d => d.who === p.who && d.date < today)],
+  }));
+}
+// 今日の新作に日付をつける（DAILY_START の日が1日目。開始日が未定なら新作は出ない）
+function dailyEntries() {
+  if (typeof DAILY === "undefined" || typeof DAILY_START === "undefined" || !DAILY_START) return [];
+  const [y, m, d] = DAILY_START.split("-").map(Number);
+  return DAILY.map((s, i) => {
+    const dt = new Date(y, m - 1, d + i);
+    const date = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+    return { ...s, date, day: i + 1 };
+  });
+}
+function buildDeck(rand = Math.random, count = ROUNDS, excludeWho = null) {
+  const people = poolPeople();
+  const order = people.map((_, i) => i).filter(i => people[i].who !== excludeWho);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order.slice(0, Math.min(count, order.length)).map(i => {
+    const p = people[i];
+    const v = p.variants[Math.floor(rand() * p.variants.length)];
+    return { who: p.who, icon: p.icon, status: p.status, personIndex: i, ...v };
+  });
+}
+// 今日の5問：今までの場面から4問 ＋ 最後に「今日の新作」1問（新作がない日は5問とも今までの場面）
+function buildDailyDeck() {
+  const rand = seededRandom(Number(todayKey().replace(/-/g, "")) * 7919);
+  const fresh = dailyEntries().find(d => d.date === todayKey());
+  if (!fresh) return buildDeck(rand);
+  const pi = PEOPLE.findIndex(p => p.who === fresh.who);
+  const p = PEOPLE[pi];
+  return [...buildDeck(rand, ROUNDS - 1, fresh.who), { icon: p.icon, status: p.status, personIndex: pi, ...fresh, isNew: true }];
+}
+
+/* ---- 今日の5問 ---- */
+// 日付（その人のスマホの日付）から、毎日決まった乱数を作る
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function todayLabel() { const d = new Date(); return `${d.getMonth() + 1}/${d.getDate()}`; }
+function seededRandom(seed) {
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// 今日の結果は、このブラウザの中だけに保存する（1日1回の判定に使う）
+const DAILY_KEY = "kidoku-daily";
+function loadDaily() {
+  try {
+    const d = JSON.parse(localStorage.getItem(DAILY_KEY) || "null");
+    return d && d.date === todayKey() ? d : null;
+  } catch (e) { return null; }
+}
+function saveDaily(data) {
+  try { localStorage.setItem(DAILY_KEY, JSON.stringify(data)); } catch (e) { /* 保存できなくても遊べる */ }
+}
+function refreshTitle() {
+  const done = loadDaily();
+  $("dailyBtn").textContent = done ? `今日の結果を見る（${todayLabel()}）` : `今日の5問（${todayLabel()}）`;
+  $("dailyNote").textContent = done
+    ? "今日の5問は遊び済み。また明日！ フリープレイは何回でも遊べます。"
+    : "今日の5問は1日1回。みんな同じ問題です。";
 }
 
 /* 経過時間 → ゲーム内の分。だんだん速く進む */
@@ -303,12 +450,24 @@ function toSeconds(m) {
    ・正解の時間帯の中 … 真ん中が100点、端が90点
    ・外れたら         … 85点から、ズレるほど急に下がる（0.5秒で約60点、1秒で約45点、2秒で約20点）
    ・「返さない」が正解の場面で返信したときは、区切りごとの点数のまま */
+/* 曲が流れる場面（song: true）だけは、曲の間（実際の15秒）は時計がゆっくり進み、
+   15秒で3分半の曲を1曲聴いたことになる。曲が終わったら、いつもの速さに戻る */
+const SONG = { sec: 15, min: 3.5 };
+function sceneMinutes(s, t) {
+  if (!s.song) return toMinutes(t);
+  return t <= SONG.sec ? t * SONG.min / SONG.sec : SONG.min + toMinutes(t - SONG.sec);
+}
+function sceneSeconds(s, m) {
+  if (!s.song) return toSeconds(m);
+  return m <= SONG.min ? m * SONG.sec / SONG.min : SONG.sec + toSeconds(m - SONG.min);
+}
+
 function timingScore(s, min, zone) {
   const i = s.zones.findIndex(z => z.score === 100);
   if (i < 0) return zone.score;
-  const lo = toSeconds(i > 0 ? s.zones[i - 1].max : 0);
-  const hi = toSeconds(s.zones[i].max);
-  const t = toSeconds(min);
+  const lo = sceneSeconds(s, i > 0 ? s.zones[i - 1].max : 0);
+  const hi = sceneSeconds(s, s.zones[i].max);
+  const t = sceneSeconds(s, min);
   if (t >= lo && t < hi) {
     const half = (hi - lo) / 2;
     return Math.round(100 - 10 * Math.abs(t - (lo + half)) / half);
@@ -362,7 +521,8 @@ const sndBad    = () => beep([220, 160], 0.16, "sawtooth", 0.1);
 
 /* ---- 表示まわり ---- */
 function show(id) {
-  ["title", "game", "result"].forEach(s => $(s).style.display = (s === id ? "flex" : "none"));
+  // 画面（section）を1つだけ表示する。開発用の一覧画面などが増えても、ここは直さなくてよい
+  document.querySelectorAll("#phone > section").forEach(sec => { sec.style.display = sec.id === id ? "flex" : "none"; });
 }
 const pad = n => String(n).padStart(2, "0");
 function clockText(scene, minutes) {
@@ -390,11 +550,27 @@ function addRow(kind, html, meta = "", name = "") {
 }
 
 /* ---- ラウンドの流れ ---- */
-function startGame() {
+function startGame(newMode = "free") {
+  mode = newMode;
   round = 0; results = [];
-  SCENES = buildDeck();
+  SCENES = mode === "daily" ? buildDailyDeck() : buildDeck();
   show("game");
   startRound();
+}
+
+// 決まった場面だけを遊ぶ（開発用の一覧などから使う）
+function startCustom(scenes) {
+  mode = "free";
+  round = 0; results = [];
+  SCENES = scenes;
+  show("game");
+  startRound();
+}
+
+function startDaily() {
+  const done = loadDaily();
+  if (done) { mode = "daily"; showResult(done.results); return; }
+  startGame("daily");
 }
 
 function startRound() {
@@ -403,12 +579,29 @@ function startRound() {
   $("talk").innerHTML = "";
   $("avatar").textContent = s.icon;
   $("talkName").textContent = s.who;
+  $("talkStatus").textContent = s.status || "";
   $("talkRound").textContent = `${round + 1} / ${SCENES.length}`;
+  // 電池：場面に battery があればその値、なければ50〜100%のどれかで始まる（24時間では切れない）
+  battStart = s.battery ?? 50 + Math.floor(Math.random() * 51);
+  showBattery(battStart);
+  // 通知：場面の通知 ＋ ときどき関係ない通知
+  pendingBanners = [...(s.banners || [])];
+  if (Math.random() < 0.45) {
+    const n = NOISE_BANNERS[Math.floor(Math.random() * NOISE_BANNERS.length)];
+    pendingBanners.push({ at: 3 + Math.floor(Math.random() * 180), ...n });
+  }
+  pendingBanners.sort((a, b) => a.at - b.at);
+  $("banner").classList.remove("show");
   $("clock").textContent = clockText(s, 0);
   $("timer").innerHTML = "&nbsp;";
   $("timer").classList.remove("hot");
   $("timerLabel").textContent = "メッセージが届きました";
   $("draft").textContent = s.reply;
+  // 電話の場面：送信ボタンの代わりに「電話をかける」「通話に参加」ボタンになる
+  $("draft").style.display = s.call ? "none" : "";
+  $("replyBtn").textContent = s.call ? `📞 ${s.call}` : "送信";
+  $("replyBtn").classList.toggle("call", !!s.call);
+  typingRow = null; msgRow = null;
   $("actions").style.display = "flex";
   $("replyBtn").disabled = true;
   $("answer").style.display = "none";
@@ -418,13 +611,21 @@ function startRound() {
   $("judge").className = "judge";
 
   // ラウンド開始の幕（短く）
-  $("cRound").textContent = `ROUND ${round + 1}`;
+  $("cRound").textContent = s.isNew ? "NEW ★ 今日の新作" : `ROUND ${round + 1}`;
+  $("cRound").classList.toggle("new", !!s.isNew);
   $("cWho").textContent = `${s.icon} ${s.who}`;
   $("cWhen").textContent = `${clockText(s, 0)} ごろ`;
   $("curtain").style.display = "flex";
   setTimeout(() => {
     $("curtain").style.display = "none";
-    addRow("their", s.message, clockText(s, 0), s.sender);
+    // それまでのやりとり（history）があれば先に並べる
+    (s.history || []).forEach(h => h.from === "mine"
+      ? addRow("mine", h.text, `既読<br>${clockText(s, 0)}`)
+      : addRow("their", h.text, clockText(s, 0), s.sender));
+    msgRow = addRow("their", s.message, clockText(s, 0), s.sender);
+    if (s.song) addRow("their",
+      `<div class="music"><b>🎵 おすすめの1曲</b><div class="music-bar"><i id="musicBar"></i></div><span id="musicTime">0:00 / 3:30</span></div>`,
+      clockText(s, 0), s.sender);
     sndArrive();
     setTimeout(beginTimer, 500);
   }, 1100);
@@ -436,10 +637,18 @@ function beginTimer() {
   $("timerLabel").textContent = "既読をつけてから";
   startAt = performance.now();
   pendingOthers = [...(SCENES[round].others || [])];
+  if (SCENES[round].song) playSong();
   const tick = () => {
-    const min = toMinutes((performance.now() - startAt) / 1000);
+    const sec = (performance.now() - startAt) / 1000;
+    const min = sceneMinutes(SCENES[round], sec);
+    if (SCENES[round].song) showSongProgress(sec);
     // 画面の更新が飛んでも、途中の発言は必ず出してから判定する
     flushOthers(Math.min(min, LIMIT_MIN));
+    flushBanners(min);
+    // 電池が切れたら、電源が落ちて既読スルー
+    const deadAt = battStart * BATT_MIN_PER_PCT;
+    if (deadAt < LIMIT_MIN && min >= deadAt) { finish(null, deadAt, "battery"); return; }
+    showBattery(battStart - min / BATT_MIN_PER_PCT);
     if (min >= LIMIT_MIN) { finish(null, LIMIT_MIN); return; }
     $("timer").innerHTML = durationText(min);
     $("timer").classList.toggle("hot", min >= 60);
@@ -450,31 +659,136 @@ function beginTimer() {
 }
 
 // 時間がたつと届く発言・写真（グループの他の人、写真の追加など）
-let pendingOthers = [];
+// others に書けるもの：
+//   text（発言）/ photo（絵文字の写真）/ photoText（文字の入った写真。board: true でホワイトボード風）
+//   stamp（スタンプ）/ note（「通話を開始しました」などのお知らせ）
+//   typing: true / false（「入力中…」を出す・消す）/ unsend: true（最初のメッセージを送信取り消しにする）
+let pendingOthers = [], typingRow = null, msgRow = null;
 function flushOthers(min) {
   const s = SCENES[round];
   while (pendingOthers.length && min >= pendingOthers[0].at) {
     const o = pendingOthers.shift();
-    const body = o.photo
-      ? `<div class="photo" style="background:${o.bg || "linear-gradient(135deg,#ffd6a5,#ff9fb2)"}">${o.photo}</div>`
+    if (o.typing === true) {
+      if (!typingRow) typingRow = addRow("their", '<span class="typing"><span></span><span></span><span></span></span>', "", o.name || s.sender);
+      continue;
+    }
+    if (o.typing === false) { if (typingRow) { typingRow.remove(); typingRow = null; } continue; }
+    if (o.unsend) {
+      if (msgRow) {
+        const b = msgRow.querySelector(".bubble");
+        b.classList.add("unsent");
+        b.textContent = "メッセージの送信を取り消しました";
+      }
+      continue;
+    }
+    if (o.note) { addRow("note", o.note); beep([1200], 0.05, "sine", 0.06); continue; }
+    if (typingRow) { typingRow.remove(); typingRow = null; } // 発言が届いたら「入力中…」は消える
+    const bg = o.bg || "linear-gradient(135deg,#ffd6a5,#ff9fb2)";
+    const body = o.photoText
+      ? `<div class="photo photo-text${o.board ? " board" : ""}" style="background:${bg}">${o.photoText.replace(/\n/g, "<br>")}</div>`
+      : o.photo ? `<div class="photo" style="background:${bg}">${o.photo}</div>`
+      : o.stamp ? `<div class="stamp">${o.stamp}</div>`
       : o.text;
     addRow("their", body, clockText(s, o.at), o.name);
     beep([1200], 0.05, "sine", 0.06);
   }
 }
 
+/* ---- 電池 ---- */
+const BATT_MIN_PER_PCT = 30; // ゲーム内の30分で1%減る（24時間で48%）
+let battStart = 80;
+function showBattery(pct) {
+  const p = Math.max(0, Math.ceil(pct));
+  $("battPct").textContent = `${p}%`;
+  $("battFill").style.width = `${p}%`;
+  $("batt").classList.toggle("low", p <= 10);
+}
+
+/* ---- 通知バナー ---- */
+// どの場面でもときどき出る、関係ない通知（これがあるので、ヒントの通知が出ても目立たない）
+const NOISE_BANNERS = [
+  { from: "お天気", text: "明日は一日晴れ☀️ 最高気温18℃" },
+  { from: "ショップ", text: "週末限定！ポイント2倍キャンペーン開催中" },
+  { from: "カレンダー", text: "明日 10:00 歯医者" },
+  { from: "フリマ", text: "あなたの出品に「いいね」がつきました" },
+  { from: "ゲーム", text: "スタミナが全回復しました" },
+  { from: "ニュース", text: "全国で紅葉が見ごろに" },
+  { from: "音楽", text: "あなたへのおすすめプレイリストが更新されました" },
+  { from: "宅配便", text: "お荷物を明日お届け予定です" },
+  { from: "スタンプ", text: "新作スタンプが登場！" },
+  { from: "写真", text: "1年前の今日の思い出を見てみましょう" },
+];
+let pendingBanners = [], bannerTimer = null;
+function flushBanners(min) {
+  while (pendingBanners.length && min >= pendingBanners[0].at) {
+    const b = pendingBanners.shift();
+    $("bannerFrom").textContent = b.from;
+    $("bannerText").textContent = b.text;
+    $("banner").classList.add("show");
+    beep([990], 0.04, "sine", 0.05);
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => $("banner").classList.remove("show"), 2800);
+  }
+}
+
 function stopTimer() {
   cancelAnimationFrame(timerId);
-  return toMinutes((performance.now() - startAt) / 1000);
+  return sceneMinutes(SCENES[round], (performance.now() - startAt) / 1000);
+}
+
+/* ---- 曲（このゲーム用に作ったオリジナルの短いメロディ。約15秒） ---- */
+// [音の高さ（ドからの半音の数）, 長さ（拍）]
+const SONG_NOTES = [
+  [7, 1], [9, 1], [12, 1], [9, 1], [7, 2], [4, 2],
+  [5, 1], [7, 1], [9, 1], [7, 1], [4, 2], [2, 2],
+  [7, 1], [9, 1], [12, 1], [14, 1], [16, 2], [14, 2],
+  [12, 1], [9, 1], [7, 1], [9, 1], [12, 4],
+];
+const SONG_BASS = [0, -3, -7, -5, 0, -3, -7, 0]; // 4拍ごとの低い音（ド・ラ・ファ・ソ…）
+let songNodes = [];
+function playSong() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const beat = SONG.sec / 32, t0 = audio.currentTime + 0.05;
+    const tone = (semi, start, len, type, vol, base) => {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type; o.frequency.value = base * Math.pow(2, semi / 12);
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.linearRampToValueAtTime(vol, start + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, start + len * 0.95);
+      o.connect(g); g.connect(audio.destination);
+      o.start(start); o.stop(start + len);
+      songNodes.push(o);
+    };
+    let t = t0;
+    SONG_NOTES.forEach(([semi, len]) => { tone(semi, t, len * beat, "triangle", 0.12, 523.25); t += len * beat; });
+    SONG_BASS.forEach((semi, i) => tone(semi, t0 + i * 4 * beat, 4 * beat, "sine", 0.08, 130.81));
+  } catch (e) { /* 音が出せない環境でも、時計の進み方は同じ */ }
+}
+function stopSong() {
+  songNodes.forEach(o => { try { o.stop(); } catch (e) {} });
+  songNodes = [];
+}
+function showSongProgress(sec) {
+  const bar = $("musicBar"), time = $("musicTime");
+  if (!bar) return;
+  const p = Math.min(1, sec / SONG.sec);
+  bar.style.width = `${p * 100}%`;
+  const s = Math.floor(p * SONG.min * 60);
+  time.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} / 3:30`;
 }
 
 // replied: true=返信 / false=既読スルー / null=時間切れ（既読スルー扱い）
-function finish(replied, forcedMin) {
+function finish(replied, forcedMin, reason) {
   if (state !== "running") return;
   state = "reacting";
   const min = forcedMin ?? stopTimer();
   if (forcedMin) cancelAnimationFrame(timerId);
+  stopSong();
   flushOthers(min);
+  flushBanners(min);
+  if (typingRow) { typingRow.remove(); typingRow = null; }
+  showBattery(battStart - min / BATT_MIN_PER_PCT);
   const s = SCENES[round];
   $("replyBtn").disabled = true;
   $("timer").innerHTML = durationText(min);
@@ -485,11 +799,16 @@ function finish(replied, forcedMin) {
     const zone = s.zones.find(z => min < z.max);
     const score = timingScore(s, min, zone);
     outcome = { ...zone, score, judge: score >= 98 ? "ど真ん中！" : zone.judge };
-    addRow("mine", s.reply, `既読<br>${clockText(s, min)}`);
+    // グループでは「既読 7」のように人数が出る（メンバー数−自分）
+    const members = Number((s.who.match(/\((\d+)\)/) || [])[1] || 0);
+    const read = members > 1 ? `既読 ${members - 1}` : "既読";
+    addRow("mine", s.reply, `${read}<br>${clockText(s, min)}`);
     sndSend();
   } else {
     outcome = s.skip;
-    addRow("note", "返信しないまま、24時間がたった（既読スルー）");
+    addRow("note", reason === "battery"
+      ? "スマホの電池が切れた（そのまま既読スルー）"
+      : "返信しないまま、24時間がたった（既読スルー）");
   }
 
   // 相手の反応（打っている…の演出を少しだけ）
@@ -514,7 +833,10 @@ function showJudge(outcome, min, replied) {
   else if (!okish) { sndBad(); $("phone").classList.remove("shake"); void $("phone").offsetWidth; $("phone").classList.add("shake"); }
   else sndSend();
 
-  results.push({ who: s.who, icon: s.icon, score: outcome.score, min, replied });
+  results.push({
+    who: s.who, icon: s.icon, personIndex: s.personIndex, isNew: !!s.isNew, score: outcome.score, min, replied,
+    react: outcome.react, time: clockText(s, Math.min(min + 1, LIMIT_MIN)),
+  });
 
   setTimeout(() => {
     j.className = "judge";
@@ -533,34 +855,149 @@ function showJudge(outcome, min, replied) {
 
 function next() {
   round++;
-  if (round < SCENES.length) startRound(); else showResult();
+  if (round < SCENES.length) { startRound(); return; }
+  if (mode === "daily") saveDaily({ date: todayKey(), results });
+  showResult(results);
 }
 
 /* ---- 結果 ---- */
-let shareText = "";
-function showResult() {
-  const total = results.reduce((a, r) => a + r.score, 0);
-  const max = SCENES.length * 100;
+let shareText = "", resultBlob = null;
+const gameUrl = () => location.protocol.startsWith("http")
+  ? location.origin + location.pathname.replace(/index\.html$/, "")
+  : "https://gunhana-games.github.io/kidoku/";
+
+function showResult(res) {
+  const total = res.reduce((a, r) => a + r.score, 0);
+  const max = res.length * 100;
   const hensachi = Math.round(35 + (total / max) * 40);
   const t = RESULT_TITLES.find(r => total / max >= r.min);
+  const modeLabel = mode === "daily" ? `${todayLabel()} の5問` : "フリープレイ";
+  $("resMode").textContent = modeLabel;
   $("resScore").textContent = hensachi;
   $("resTitle").textContent = `「${t.title}」`;
   $("resComment").textContent = t.comment;
-  $("resList").innerHTML = results.map(r =>
-    `<div><span>${r.who}</span><span>${r.replied ? durationPlain(r.min) + "に返信" : "既読スルー"}　<b>${r.score}点</b></span></div>`
-  ).join("");
+  $("retryBtn").textContent = mode === "daily" ? "フリープレイで遊ぶ" : "もう一回";
   show("result");
+  window.scrollTo(0, 0);
   if (hensachi >= 65) confetti(60);
 
   // シェア文は答えがバレないよう、色のマスだけで結果を見せる
   const square = sc => sc >= 90 ? "🟩" : sc >= 50 ? "🟨" : "🟥";
-  const squares = results.map(r => r.icon + square(r.score)).join(" ");
-  shareText = `【既読から何分？】\n返信偏差値 ${hensachi}「${t.title}」\n\n${squares}\n\n#既読から何分`;
+  const squares = res.map(r => r.icon + square(r.score)).join(" ");
+  const head = mode === "daily" ? `【既読から何分？】${todayLabel()} の5問` : "【既読から何分？】";
+  shareText = `${head}\n返信偏差値 ${hensachi}「${t.title}」\n\n${squares}\n\n#既読から何分`;
+
+  // 結果のトーク一覧を画像にする
+  const canvas = drawResultImage(res, { hensachi, title: t.title, modeLabel });
+  $("resImg").src = canvas.toDataURL("image/png");
+  resultBlob = null;
+  canvas.toBlob(b => { resultBlob = b; }, "image/png");
+  $("imgBtn").textContent = canShareImage() ? "画像でシェア" : "画像を保存";
+}
+
+/* 結果画像：スマホのトーク一覧のような1枚の絵（1080×1350）
+   相手ごとに「最後に来た反応」を並べる。何分で返すのが正解かは書かない */
+const AVATAR_COLORS = ["#ff8fab", "#5c7cfa", "#868e96", "#20c997", "#fab005", "#f783ac", "#845ef7", "#15aabf"];
+const IMG_FONT = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif';
+function drawResultImage(res, info) {
+  const W = 1080, H = 1350;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  const font = (w, px) => `${w} ${px}px ${IMG_FONT}`;
+  const round = (x, y, w, h, r, fill) => { g.beginPath(); g.roundRect(x, y, w, h, r); g.fillStyle = fill; g.fill(); };
+  // 文字を幅に合わせて折り返す（最大 lines 行、はみ出したら「…」）
+  const wrap = (text, maxW, lines) => {
+    const out = []; let cur = "";
+    for (const ch of text) {
+      if (g.measureText(cur + ch).width > maxW) { out.push(cur); cur = ch; } else cur += ch;
+    }
+    out.push(cur);
+    if (out.length > lines) { out.length = lines; out[lines - 1] = out[lines - 1].slice(0, -1) + "…"; }
+    return out;
+  };
+
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, W, H);
+
+  // 上：タイトルと返信偏差値
+  g.fillStyle = "#2b3445"; g.fillRect(0, 0, W, 300);
+  g.fillStyle = "#ffffff"; g.font = font(800, 52); g.textBaseline = "alphabetic"; g.textAlign = "left";
+  g.fillText("既読から何分？", 60, 110);
+  g.fillStyle = "rgba(255,255,255,.7)"; g.font = font(700, 32);
+  g.fillText(info.modeLabel, 60, 165);
+  g.fillStyle = "#ffffff"; g.font = font(800, 44);
+  g.fillText(`「${info.title}」`, 44, 250);
+  g.textAlign = "right";
+  g.fillStyle = "rgba(255,255,255,.7)"; g.font = font(700, 28);
+  g.fillText("返信偏差値", W - 60, 90);
+  g.fillStyle = "#ff5a7a"; g.font = font(900, 150);
+  g.fillText(String(info.hensachi), W - 56, 230);
+
+  // 中：トーク一覧
+  g.fillStyle = "#8a93a3"; g.font = font(700, 28); g.textAlign = "left";
+  g.fillText("トーク", 60, 360);
+  const top = 390, rowH = 160;
+  res.forEach((r, i) => {
+    const y = top + i * rowH;
+    const color = AVATAR_COLORS[(r.personIndex ?? i) % AVATAR_COLORS.length];
+    g.beginPath(); g.arc(120, y + rowH / 2, 54, 0, Math.PI * 2); g.fillStyle = color; g.fill();
+    g.fillStyle = "#ffffff"; g.font = font(800, 46); g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(r.who.replace(/\(.*\)/, "")[0], 120, y + rowH / 2 + 2);
+    g.textBaseline = "alphabetic"; g.textAlign = "left";
+    g.fillStyle = "#1d1d1f"; g.font = font(800, 38);
+    g.fillText(r.who, 200, y + 62);
+    if (r.isNew) { // 今日の新作には「NEW」の札
+      const nx = 200 + g.measureText(r.who).width + 16;
+      round(nx, y + 28, 92, 42, 21, "#ff5a7a");
+      g.fillStyle = "#ffffff"; g.font = font(800, 24); g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText("NEW", nx + 46, y + 50);
+      g.textAlign = "left"; g.textBaseline = "alphabetic";
+    }
+    g.fillStyle = "#5c6575"; g.font = font(400, 31);
+    wrap(r.react || "", 640, 2).forEach((line, k) => g.fillText(line, 200, y + 108 + k * 40));
+    // 右：時刻と点数
+    g.textAlign = "right"; g.fillStyle = "#8a93a3"; g.font = font(400, 26);
+    g.fillText(r.time || "", W - 60, y + 58);
+    const pill = r.score >= 90 ? "#2fb35a" : r.score >= 50 ? "#f0a400" : "#e5484d";
+    round(W - 190, y + 80, 130, 52, 26, pill);
+    g.fillStyle = "#ffffff"; g.font = font(800, 30); g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText(`${r.score}点`, W - 125, y + 107);
+    g.textBaseline = "alphabetic";
+    if (i < res.length - 1) { g.fillStyle = "#eef0f4"; g.fillRect(200, y + rowH - 1, W - 260, 2); }
+  });
+
+  // 下：ハッシュタグとURL
+  g.fillStyle = "#fff0f3"; g.fillRect(0, H - 120, W, 120);
+  g.textAlign = "left"; g.fillStyle = "#ff5a7a"; g.font = font(800, 36);
+  g.fillText("#既読から何分", 60, H - 48);
+  g.textAlign = "right"; g.fillStyle = "#5c6575"; g.font = font(700, 28);
+  g.fillText(gameUrl().replace(/^https?:\/\//, "").replace(/\/$/, ""), W - 60, H - 50);
+  return c;
+}
+
+function imageFile() {
+  return resultBlob ? new File([resultBlob], "kidoku-result.png", { type: "image/png" }) : null;
+}
+function canShareImage() {
+  try {
+    const f = new File([new Blob()], "x.png", { type: "image/png" });
+    return !!(navigator.canShare && navigator.canShare({ files: [f] }));
+  } catch (e) { return false; }
+}
+// スマホ：共有メニューから画像つきで X などに送れる。パソコン：画像を保存する
+async function shareImage() {
+  const file = imageFile();
+  if (file && canShareImage()) {
+    try { await navigator.share({ files: [file], text: `${shareText}\n${gameUrl()}` }); return; }
+    catch (e) { if (e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = $("resImg").src; a.download = "kidoku-result.png";
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 function share() {
-  // シェアするURLは、余計な # や ? を取り除いたゲームのトップページ
-  const url = location.protocol.startsWith("http") ? location.origin + location.pathname.replace(/index\.html$/, "") : "";
+  const url = location.protocol.startsWith("http") ? gameUrl() : "";
   const intent = "https://x.com/intent/tweet?text=" + encodeURIComponent(shareText) + (url ? "&url=" + encodeURIComponent(url) : "");
   window.open(intent, "_blank", "noopener");
 }
@@ -582,7 +1019,8 @@ function confetti(n) {
 }
 
 /* ---- ボタン ---- */
-$("startBtn").onclick = startGame;
+$("dailyBtn").onclick = startDaily;
+$("startBtn").onclick = () => startGame("free");
 $("replyBtn").onclick = () => finish(true);
 $("nextBtn").onclick = next;
 // 解説は押したときだけ開く（もう一度押すと閉じる）
@@ -591,8 +1029,11 @@ $("whyBtn").onclick = () => {
   $("explain").style.display = open ? "block" : "none";
   $("whyBtn").textContent = open ? "解説を閉じる" : "解説を見る";
 };
-$("retryBtn").onclick = startGame;
+$("retryBtn").onclick = () => startGame("free");
 $("shareBtn").onclick = share;
+$("imgBtn").onclick = shareImage;
+$("toTitleBtn").onclick = () => { refreshTitle(); show("title"); };
+refreshTitle();
 </script>
 </body>
 </html>
