@@ -255,7 +255,8 @@
   .curtain .when { font-size: 16px; opacity: .8; }
 
   /* ===== 結果画面 ===== */
-  #result { display: none; gap: 14px; }
+  /* 結果画面は縦に長いので、画面の中でスクロールできるようにする */
+  #result { display: none; gap: 14px; min-height: 0; overflow-y: auto; justify-content: safe center; }
   .res-label { font-size: 14px; color: var(--sub); }
   .res-score { font-size: 72px; font-weight: 900; color: var(--accent); line-height: 1; }
   .res-title { font-size: 26px; font-weight: 800; }
@@ -349,10 +350,10 @@
   </section>
 </div>
 
-<script src="scenes.js"></script>
-<script src="daily.js"></script>
-<!-- 開発用の一覧ボタン。公開するときは、この1行を消す（dev.js も消してよい） -->
-<script src="dev.js" defer></script>
+<script src="scenes.js?v=3"></script>
+<script src="daily.js?v=3"></script>
+<!-- 開発用の一覧ボタン。公開するときは、この1行を消す（dev.js も消してよい）。ファイルを直したら ?v= の数字を1つ増やすと、古いものが残らない -->
+<script src="dev.js?v=3" defer></script>
 <script>
 /* 場面のデータは scenes.js にあります */
 // ROUNDS 人を選び、それぞれのパターンを1つ選ぶ。
@@ -878,7 +879,7 @@ function showResult(res) {
   $("resComment").textContent = t.comment;
   $("retryBtn").textContent = mode === "daily" ? "フリープレイで遊ぶ" : "もう一回";
   show("result");
-  window.scrollTo(0, 0);
+  $("result").scrollTop = 0;
   if (hensachi >= 65) confetti(60);
 
   // シェア文は答えがバレないよう、色のマスだけで結果を見せる

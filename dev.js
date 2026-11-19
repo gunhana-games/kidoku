@@ -33,13 +33,14 @@
   // 一覧の画面
   const sec = document.createElement("section");
   sec.id = "devList";
-  sec.style.cssText = "display:none;flex:1;flex-direction:column;background:#f4f6fa;";
+  // 一覧は縦に長いので、この画面の中でスクロールできるようにする
+  sec.style.cssText = "display:none;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:column;background:#f4f6fa;";
   const css = document.createElement("style");
   css.textContent = `
     #devList header { background: var(--header); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 2; }
     #devList header b { font-size: 16px; }
     #devList header button { margin-left: auto; background: #fff; border: none; border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 700; cursor: pointer; }
-    #devList .dev-body { padding: 8px 12px 40px; overflow-y: auto; }
+    #devList .dev-body { padding: 8px 12px 40px; }
     #devList h3 { font-size: 13px; color: var(--sub); margin: 18px 4px 6px; }
     #devList .dev-item { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: #fff; border: none; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; font: inherit; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
     #devList .dev-item:active { transform: scale(.98); }
@@ -82,7 +83,7 @@
     sec.querySelector("#devBack").onclick = () => { refreshTitle(); show("title"); };
   }
 
-  function openList() { build(); show("devList"); window.scrollTo(0, 0); }
+  function openList() { build(); show("devList"); sec.scrollTop = 0; }
 
   $("phone").appendChild(sec);
 
